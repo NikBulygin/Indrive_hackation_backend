@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { RouteRequest, RouteResponse, OSRMRoute, GeoPoint } from '../types';
+import { RouteRequest, RouteResponse, OSRMRoute, GeoPoint, RouteProfile } from '../types';
 import { OSRM_CONFIG, ERROR_MESSAGES } from '../constants';
 
 export class RouteService {
@@ -44,7 +44,12 @@ export class RouteService {
       throw new Error(ERROR_MESSAGES.INVALID_COORDINATES);
     }
 
-    const profile = request.profile || 'driving';
+    const profile: RouteProfile = request.profile || 'driving';
+    
+    if (!OSRM_CONFIG.PROFILES[profile]) {
+      throw new Error(ERROR_MESSAGES.INVALID_ROUTE_TYPE);
+    }
+    
     const osrmProfile = OSRM_CONFIG.PROFILES[profile];
     const startCoords = this.formatCoordinates(request.startPoint);
     const endCoords = this.formatCoordinates(request.endPoint);
@@ -69,12 +74,15 @@ export class RouteService {
       return this.parseOSRMResponse(response.data.routes[0], profile);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        if (error.response?.status === 400) {
-          throw new Error(ERROR_MESSAGES.INVALID_COORDINATES);
-        }
-        if (error.response?.status === 404) {
-          throw new Error(ERROR_MESSAGES.ROUTE_NOT_FOUND);
-        }
+      if (error.response?.status === 400) {
+        throw new Error(ERROR_MESSAGES.INVALID_COORDINATES);
+      }
+      if (error.response?.status === 404) {
+        throw new Error(ERROR_MESSAGES.ROUTE_NOT_FOUND);
+      }
+      if (error.response?.status >= 500) {
+        throw new Error(ERROR_MESSAGES.INTERNAL_ERROR);
+      }
       }
       throw new Error(ERROR_MESSAGES.INTERNAL_ERROR);
     }

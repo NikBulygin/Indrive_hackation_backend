@@ -60,10 +60,49 @@ export interface GeoTrackStats {
   averagePointsPerTrack: number;
 }
 
+export type RouteProfile = 'driving' | 'walking' | 'cycling' | 'bus';
+
 export interface RouteRequest {
   startPoint: GeoPoint;
   endPoint: GeoPoint;
-  profile?: 'driving' | 'walking' | 'cycling';
+  profile?: RouteProfile;
+}
+
+export interface RouteType {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  osrmProfile: string;
+  speed: number;
+  emissions: number;
+}
+
+export interface DriverLocation {
+  id: string;
+  lat: number;
+  lng: number;
+  timestamp: number;
+  status: 'available' | 'busy' | 'offline';
+}
+
+export interface DemandPoint {
+  lat: number;
+  lng: number;
+  intensity: number;
+  radius: number;
+  driverCount: number;
+  score: number;
+}
+
+export interface DriverRecommendation {
+  point: DemandPoint;
+  distance: number;
+  estimatedTime: number;
+  competition: number;
+  demand: number;
+  finalScore: number;
 }
 
 export interface RouteResponse {
@@ -118,4 +157,38 @@ export interface TrackingConfig {
   updateInterval: number;
   routeRecalculationThreshold: number;
   maxRouteAge: number;
+}
+
+export interface HeatmapPoint {
+  lat: number;
+  lng: number;
+  radius: number;
+  intensity: number;
+  count: number;
+}
+
+export interface HeatmapConfig {
+  gridSize: number;
+  radius: number;
+  intensityThreshold: number;
+  maxPoints: number;
+}
+
+export interface HeatmapRequest {
+  bounds?: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  };
+  config?: Partial<HeatmapConfig>;
+  trackIds?: string[];
+}
+
+export interface ClusteredPoint {
+  center: GeoPoint;
+  points: GeoLocation[];
+  radius: number;
+  intensity: number;
+  count: number;
 }

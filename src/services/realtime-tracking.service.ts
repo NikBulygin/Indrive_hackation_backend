@@ -1,5 +1,6 @@
 import { WebSocket } from 'ws';
 import { RouteService } from './route.service';
+import { DriverService } from './driver.service';
 import { RealtimeTracking, LocationUpdate, GeoPoint, RouteResponse, SocketMessage, TrackingConfig } from '../types';
 import { SOCKET_CONFIG, SOCKET_EVENTS } from '../constants';
 
@@ -12,6 +13,7 @@ export class RealtimeTrackingService {
 
   constructor(
     private routeService: RouteService,
+    private driverService?: DriverService,
     config?: Partial<TrackingConfig>
   ) {
     this.config = {
@@ -84,6 +86,15 @@ export class RealtimeTrackingService {
 
     this.checkRouteRecalculation(clientId, tracking);
     this.broadcastLocationUpdate(clientId, location);
+
+    if (this.driverService && tracking.isDriver) {
+      this.driverService.updateDriverLocation(
+        clientId,
+        location.lat,
+        location.lng,
+        'available'
+      );
+    }
   }
 
   private async handleRouteRequest(clientId: string, data: { destination: GeoPoint; profile?: string }): Promise<void> {
@@ -178,17 +189,28 @@ export class RealtimeTrackingService {
     return R * c;
   }
 
-  private startTracking(clientId: string, data: { location: LocationUpdate; destination?: GeoPoint }): void {
+  private startTracking(clientId: string, data: { location: LocationUpdate; destination?: GeoPoint; isDriver?: boolean }): void {
     const tracking: RealtimeTracking = {
       clientId,
       currentLocation: data.location,
       destination: data.destination,
       isTracking: true,
       lastUpdate: Date.now(),
+      isDriver: data.isDriver || false,
     };
 
     this.trackingData.set(clientId, tracking);
     this.startUpdateInterval(clientId);
+    this.sendMessage(clientId, { type: 'tracking_started', data: { clientId } });
+
+    if (this.driverService && data.isDriver) {
+      this.driverService.updateDriverLocation(
+        clientId,
+        data.location.lat,
+        data.location.lng,
+        'available'
+      );
+    }
   }
 
   private stopTracking(clientId: string): void {

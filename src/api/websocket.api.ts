@@ -4,8 +4,7 @@ import { RealtimeTrackingService } from '../services/realtime-tracking.service';
 import { RouteService } from '../services/route.service';
 import { SOCKET_EVENTS } from '../constants';
 
-export const createWebSocketApi = (routeService: RouteService) => {
-  const trackingService = new RealtimeTrackingService(routeService);
+export const createWebSocketApi = (realtimeTrackingService: RealtimeTrackingService) => {
 
   return new Elysia()
     .ws('/ws', {
@@ -29,7 +28,7 @@ export const createWebSocketApi = (routeService: RouteService) => {
         const clientId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         (ws as any).clientId = clientId;
         
-        trackingService.addClient(clientId, ws as any);
+        realtimeTrackingService.addClient(clientId, ws as any);
         
         ws.send(JSON.stringify({
           type: 'connection',
@@ -40,22 +39,22 @@ export const createWebSocketApi = (routeService: RouteService) => {
       close(ws) {
         const clientId = (ws as any).clientId;
         if (clientId) {
-          trackingService.removeClient(clientId);
+          realtimeTrackingService.removeClient(clientId);
         }
       },
     })
     .get('/ws/clients', () => ({
-      activeClients: trackingService.getActiveClients(),
-      totalClients: trackingService.getActiveClients().length,
+      activeClients: realtimeTrackingService.getActiveClients(),
+      totalClients: realtimeTrackingService.getActiveClients().length,
     }))
     .get('/ws/tracking/:clientId', ({ params }) => {
-      const trackingData = trackingService.getTrackingData(params.clientId);
+      const trackingData = realtimeTrackingService.getTrackingData(params.clientId);
       if (!trackingData) {
         return { error: 'Client not found' };
       }
       return trackingData;
     })
     .get('/ws/tracking', () => ({
-      trackingData: trackingService.getAllTrackingData(),
+      trackingData: realtimeTrackingService.getAllTrackingData(),
     }));
 };

@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { RouteService } from '../services/route.service';
-import { API_ENDPOINTS, ERROR_MESSAGES } from '../constants';
-import { ApiResponse, RouteRequest, RouteResponse } from '../types';
+import { API_ENDPOINTS, ERROR_MESSAGES, ROUTE_TYPES } from '../constants';
+import { ApiResponse, RouteRequest, RouteResponse, RouteType } from '../types';
 
 const GeoPointSchema = t.Object({
   lat: t.Number({
@@ -23,6 +23,7 @@ const RouteRequestSchema = t.Object({
     t.Literal('driving'),
     t.Literal('walking'),
     t.Literal('cycling'),
+    t.Literal('bus'),
   ], {
     description: 'Route profile type',
     default: 'driving',
@@ -43,6 +44,31 @@ const RouteResponseSchema = t.Object({
 
 export const createRouteApi = (routeService: RouteService) => {
   return new Elysia()
+    .get(API_ENDPOINTS.ROUTE_TYPES, (): ApiResponse<RouteType[]> => {
+      return {
+        success: true,
+        data: ROUTE_TYPES,
+      };
+    }, {
+      response: t.Object({
+        success: t.Boolean(),
+        data: t.Array(t.Object({
+          id: t.String(),
+          name: t.String(),
+          description: t.String(),
+          icon: t.String(),
+          color: t.String(),
+          osrmProfile: t.String(),
+          speed: t.Number(),
+          emissions: t.Number(),
+        })),
+      }),
+      detail: {
+        tags: ['Routes'],
+        summary: 'Get available route types',
+        description: 'Get list of available transportation types for routing with metadata',
+      },
+    })
     .post(API_ENDPOINTS.ROUTE, async ({ body }): Promise<ApiResponse<RouteResponse>> => {
       try {
         const routeRequest = body as RouteRequest;
@@ -72,8 +98,8 @@ export const createRouteApi = (routeService: RouteService) => {
       response: RouteResponseSchema,
       detail: {
         tags: ['Routes'],
-        summary: 'Get route between two points',
-        description: 'Calculate optimal route between start and end points using OpenStreetMap',
+        summary: 'Calculate route between two points',
+        description: 'Calculate optimal route between start and end points using OpenStreetMap with specified transportation type',
       },
     })
 
@@ -110,8 +136,8 @@ export const createRouteApi = (routeService: RouteService) => {
       }),
       detail: {
         tags: ['Routes'],
-        summary: 'Get multiple routes',
-        description: 'Calculate multiple routes in batch',
+        summary: 'Calculate multiple routes',
+        description: 'Calculate multiple routes in batch with different transportation types',
       },
     });
 };

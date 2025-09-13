@@ -14,6 +14,12 @@ export const API_ENDPOINTS = {
   GEO_TRACK_BY_ID: '/geo-tracks/:id',
   ROUTE: '/route',
   ROUTES: '/routes',
+  ROUTE_TYPES: '/route-types',
+  HEATMAP: '/heatmap',
+  HEATMAP_TRACK: '/heatmap/track/:trackId',
+  HEATMAP_BOUNDS: '/heatmap/bounds',
+  HEATMAP_STATS: '/heatmap/stats',
+  HEATMAP_CLUSTERS: '/heatmap/clusters',
 } as const;
 
 export const HTTP_STATUS = {
@@ -29,6 +35,8 @@ export const ERROR_MESSAGES = {
   INTERNAL_ERROR: 'Internal server error',
   ROUTE_NOT_FOUND: 'Route not found',
   INVALID_COORDINATES: 'Invalid coordinates provided',
+  INVALID_ROUTE_TYPE: 'Invalid route type provided',
+  DATABASE_ERROR: 'Database operation failed',
 } as const;
 
 export const OSRM_CONFIG = {
@@ -37,8 +45,52 @@ export const OSRM_CONFIG = {
     driving: 'driving',
     walking: 'foot',
     cycling: 'cycling',
+    bus: 'driving',
   },
 } as const;
+
+export const ROUTE_TYPES: RouteType[] = [
+  {
+    id: 'walking',
+    name: 'Walking',
+    description: 'Pedestrian route',
+    icon: '🚶',
+    color: '#4CAF50',
+    osrmProfile: 'foot',
+    speed: 5,
+    emissions: 0,
+  },
+  {
+    id: 'cycling',
+    name: 'Cycling',
+    description: 'Bicycle route',
+    icon: '🚴',
+    color: '#2196F3',
+    osrmProfile: 'cycling',
+    speed: 15,
+    emissions: 0,
+  },
+  {
+    id: 'bus',
+    name: 'Public Transport',
+    description: 'Public transportation route',
+    icon: '🚌',
+    color: '#FF9800',
+    osrmProfile: 'driving',
+    speed: 25,
+    emissions: 0.1,
+  },
+  {
+    id: 'driving',
+    name: 'Driving',
+    description: 'Car route',
+    icon: '🚗',
+    color: '#F44336',
+    osrmProfile: 'driving',
+    speed: 50,
+    emissions: 0.2,
+  },
+] as const;
 
 export const SOCKET_CONFIG = {
   PING_INTERVAL: 30000,
@@ -59,4 +111,12 @@ export const SOCKET_EVENTS = {
   PING: 'ping',
   PONG: 'pong',
   ERROR: 'error',
+} as const;
+
+export const HEATMAP_CONFIG = {
+  DEFAULT_GRID_SIZE: 0.001,
+  DEFAULT_RADIUS: 100,
+  DEFAULT_INTENSITY_THRESHOLD: 0.1,
+  DEFAULT_MAX_POINTS: 1000,
+  CLUSTERING_DISTANCE: 50,
 } as const;
